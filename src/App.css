@@ -1,0 +1,558 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.app {
+  min-height: 100vh;
+  background-color: #1a1a1b;
+  color: #d7dadc;
+}
+
+/* Header */
+.header {
+  background-color: #1a1a1b;
+  border-bottom: 1px solid #343536;
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+
+.header-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logo-icon {
+  color: #ff4500;
+}
+
+.logo h1 {
+  font-size: 24px;
+  font-weight: bold;
+  color: white;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.btn-create {
+  background-color: #ff4500;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.btn-create:hover {
+  background-color: #ff5414;
+}
+
+.username {
+  color: #d7dadc;
+}
+
+.btn-logout {
+  background: none;
+  border: none;
+  color: #818384;
+  cursor: pointer;
+  padding: 8px;
+  transition: color 0.2s;
+}
+
+.btn-logout:hover {
+  color: white;
+}
+
+.btn-signin {
+  background-color: #ff4500;
+  color: white;
+  border: none;
+  padding: 8px 24px;
+  border-radius: 24px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.btn-signin:hover {
+  background-color: #ff5414;
+}
+
+/* Main Content */
+.main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+
+/* Sort Buttons */
+.sort-buttons {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.sort-btn {
+  background-color: #272729;
+  color: #818384;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 24px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.sort-btn:hover {
+  background-color: #343536;
+}
+
+.sort-btn.active {
+  background-color: #343536;
+  color: white;
+}
+
+/* Posts List */
+.posts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.post-card {
+  background-color: #1a1a1b;
+  border: 1px solid #343536;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+
+.post-card:hover {
+  border-color: #818384;
+}
+
+.post-content-wrapper {
+  display: flex;
+}
+
+/* Upvote Section */
+.upvote-section {
+  background-color: #0e0e0f;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.upvote-btn {
+  background: none;
+  border: none;
+  color: #818384;
+  cursor: pointer;
+  padding: 4px;
+  transition: color 0.2s;
+}
+
+.upvote-btn:hover {
+  color: #ff4500;
+}
+
+.upvote-btn.active {
+  color: #ff4500;
+}
+
+.upvote-count {
+  font-weight: bold;
+  font-size: 14px;
+}
+
+/* Post Body */
+.post-body {
+  flex: 1;
+  padding: 16px;
+}
+
+.post-header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+}
+
+.post-info {
+  flex: 1;
+}
+
+.post-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #818384;
+  margin-bottom: 8px;
+}
+
+.author {
+  font-weight: 600;
+  color: #d7dadc;
+}
+
+.post-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: white;
+  margin-bottom: 8px;
+}
+
+.post-text {
+  color: #d7dadc;
+  line-height: 1.6;
+  margin-bottom: 12px;
+}
+
+.comments-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  color: #818384;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 4px 0;
+  transition: color 0.2s;
+}
+
+.comments-btn:hover {
+  color: white;
+}
+
+/* Post Actions */
+.post-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: 16px;
+}
+
+.action-btn {
+  background: none;
+  border: none;
+  color: #818384;
+  cursor: pointer;
+  padding: 8px;
+  transition: color 0.2s;
+}
+
+.action-btn.edit:hover {
+  color: #5ea3f5;
+}
+
+.action-btn.delete:hover {
+  color: #ff4500;
+}
+
+/* Comments Section */
+.comments-section {
+  margin-top: 16px;
+  padding-left: 16px;
+  border-left: 2px solid #343536;
+}
+
+.comment-input-wrapper {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.comment-input {
+  flex: 1;
+  background-color: #272729;
+  border: 1px solid #343536;
+  border-radius: 4px;
+  padding: 8px 12px;
+  color: white;
+  font-size: 14px;
+}
+
+.comment-input:focus {
+  outline: none;
+  border-color: #ff4500;
+}
+
+.comment-send-btn {
+  background-color: #ff4500;
+  border: none;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.comment-send-btn:hover {
+  background-color: #ff5414;
+}
+
+/* Comments List */
+.comments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.comment {
+  background-color: #272729;
+  border-radius: 4px;
+  padding: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+}
+
+.comment-content {
+  flex: 1;
+}
+
+.comment-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #818384;
+  margin-bottom: 4px;
+}
+
+.comment-author {
+  font-weight: 600;
+  color: #d7dadc;
+}
+
+.comment-text {
+  color: #d7dadc;
+  font-size: 14px;
+}
+
+.comment-delete-btn {
+  background: none;
+  border: none;
+  color: #818384;
+  cursor: pointer;
+  padding: 4px;
+  margin-left: 8px;
+  transition: color 0.2s;
+}
+
+.comment-delete-btn:hover {
+  color: #ff4500;
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 48px 0;
+  color: #818384;
+}
+
+.empty-icon {
+  margin: 0 auto 16px;
+  opacity: 0.5;
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  padding: 16px;
+}
+
+.modal {
+  background-color: #1a1a1b;
+  border-radius: 8px;
+  max-width: 500px;
+  width: 100%;
+  padding: 24px;
+}
+
+.modal-large {
+  max-width: 700px;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.modal-header h2 {
+  font-size: 24px;
+  font-weight: bold;
+  color: white;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  color: #818384;
+  cursor: pointer;
+  padding: 4px;
+  transition: color 0.2s;
+}
+
+.modal-close:hover {
+  color: white;
+}
+
+.modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.input {
+  width: 100%;
+  background-color: #272729;
+  border: 1px solid #343536;
+  border-radius: 8px;
+  padding: 12px 16px;
+  color: white;
+  font-size: 14px;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #ff4500;
+}
+
+.textarea {
+  width: 100%;
+  background-color: #272729;
+  border: 1px solid #343536;
+  border-radius: 8px;
+  padding: 12px 16px;
+  color: white;
+  font-size: 14px;
+  min-height: 120px;
+  resize: none;
+  font-family: inherit;
+}
+
+.textarea:focus {
+  outline: none;
+  border-color: #ff4500;
+}
+
+.btn-primary {
+  width: 100%;
+  background-color: #ff4500;
+  color: white;
+  border: none;
+  padding: 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: background-color 0.2s;
+}
+
+.btn-primary:hover {
+  background-color: #ff5414;
+}
+
+.btn-secondary {
+  background-color: #272729;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.btn-secondary:hover {
+  background-color: #343536;
+}
+
+.auth-toggle {
+  text-align: center;
+  color: #818384;
+  font-size: 14px;
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  color: #ff4500;
+  cursor: pointer;
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.link-btn:hover {
+  color: #ff5414;
+}
+
+.modal-footer {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .header-content {
+    padding: 12px;
+  }
+
+  .logo h1 {
+    font-size: 20px;
+  }
+
+  .main {
+    padding: 16px 12px;
+  }
+
+  .post-title {
+    font-size: 18px;
+  }
+
+  .post-actions {
+    margin-left: 8px;
+  }
+}
