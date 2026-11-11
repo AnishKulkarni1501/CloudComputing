@@ -240,6 +240,23 @@ body {
   margin-bottom: 12px;
 }
 
+.post-media-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+  margin: 12px 0 16px;
+}
+
+.post-media {
+  display: block;
+  width: 100%;
+  max-height: 420px;
+  object-fit: contain;
+  background: #0e0e0f;
+  border: 1px solid #343536;
+  border-radius: 6px;
+}
+
 .comments-btn {
   display: flex;
   align-items: center;
@@ -376,6 +393,52 @@ body {
   color: #ff4500;
 }
 
+.comment-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.comment-edit-btn,
+.comment-delete-btn {
+  background: none;
+  border: none;
+  color: #818384;
+  cursor: pointer;
+  padding: 4px;
+  margin-left: 4px;
+  transition: color 0.2s;
+}
+
+.comment-edit-btn:hover {
+  color: #5ea3f5;
+}
+
+.comment-edit-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.comment-edit-form .comment-input {
+  min-width: 200px;
+}
+
+.comment-save-btn,
+.comment-cancel-btn {
+  background: #343536;
+  border: 0;
+  border-radius: 4px;
+  color: #d7dadc;
+  cursor: pointer;
+  padding: 6px 10px;
+}
+
+.comment-save-btn {
+  background: #ff4500;
+  color: white;
+}
+
 /* Empty State */
 .empty-state {
   text-align: center;
@@ -475,6 +538,48 @@ body {
 .textarea:focus {
   outline: none;
   border-color: #ff4500;
+}
+
+.media-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: #d7dadc;
+  font-size: 14px;
+}
+
+.media-picker input {
+  color: #d7dadc;
+}
+
+.attachment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.attachment-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px;
+  background: #272729;
+  border-radius: 6px;
+  color: #d7dadc;
+  font-size: 13px;
+}
+
+.attachment-item button {
+  background: none;
+  border: 0;
+  color: #ff6a4a;
+  cursor: pointer;
+}
+
+.btn-primary:disabled {
+  cursor: wait;
+  opacity: 0.7;
 }
 
 .btn-primary {

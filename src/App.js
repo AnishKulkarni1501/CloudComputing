@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { MessageSquare, ThumbsUp, Trash2, Edit2, Plus, X, LogOut, Send } from 'lucide-react';
 import './App.css';
 
-const API_URL = 'http://localhost:5000/api';
+const API_URL = `${(process.env.REACT_APP_API_URL || 'http://localhost:5000').replace(/\/$/, '')}/api`;
 
 function App() {
   const [posts, setPosts] = useState([]);
@@ -14,9 +14,12 @@ function App() {
   const [editingPost, setEditingPost] = useState(null);
   const [expandedComments, setExpandedComments] = useState({});
   const [commentInputs, setCommentInputs] = useState({});
+  const [editingComment, setEditingComment] = useState(null);
+  const [selectedFiles, setSelectedFiles] = useState([]);
+  const [isSavingPost, setIsSavingPost] = useState(false);
   
   const [authForm, setAuthForm] = useState({ username: '', email: '', password: '' });
-  const [postForm, setPostForm] = useState({ title: '', content: '' });
+  const [postForm, setPostForm] = useState({ title: '', content: '', media: [] });
   const [sortBy, setSortBy] = useState('new');
 
   useEffect(() => {
@@ -93,50 +96,108 @@ function App() {
     setUser(null);
   };
 
+  const uploadPostFiles = async () => {
+    const uploaded = [];
+    for (const file of selectedFiles) {
+      if (file.size > 100 * 1024 * 1024) throw new Error(`${file.name} is larger than the 100 MB limit`);
+      const metadata = { originalName: file.name, contentType: file.type, size: file.size };
+      const presignResponse = await fetch(`${API_URL}/media/presign`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify(metadata)
+      });
+
+      if (presignResponse.status === 503) {
+        const form = new FormData();
+        form.append('file', file);
+        const localResponse = await fetch(`${API_URL}/media/local`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` },
+          body: form
+        });
+        const localData = await localResponse.json();
+        if (!localResponse.ok) throw new Error(localData.error || `Could not upload ${file.name}`);
+        uploaded.push(localData);
+        continue;
+      }
+
+      const presignData = await presignResponse.json();
+      if (!presignResponse.ok) throw new Error(presignData.error || `Could not prepare ${file.name}`);
+      const s3Form = new FormData();
+      Object.entries(presignData.fields).forEach(([key, value]) => s3Form.append(key, value));
+      s3Form.append('file', file);
+      const uploadResponse = await fetch(presignData.uploadUrl, { method: 'POST', body: s3Form });
+      if (!uploadResponse.ok) throw new Error(`S3 upload failed for ${file.name}`);
+      const confirmResponse = await fetch(`${API_URL}/media/confirm`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ key: presignData.key, originalName: file.name })
+      });
+      const confirmData = await confirmResponse.json();
+      if (!confirmResponse.ok) throw new Error(confirmData.error || `Could not verify ${file.name}`);
+      uploaded.push(confirmData);
+    }
+    return [...(postForm.media || []), ...uploaded];
+  };
+
   const handleCreatePost = async () => {
-    if (!postForm.title || !postForm.content) return;
+    if (!postForm.title.trim() || !postForm.content.trim()) return;
     
     try {
+      setIsSavingPost(true);
+      const media = await uploadPostFiles();
       const res = await fetch(`${API_URL}/posts`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(postForm)
+        body: JSON.stringify({ ...postForm, media })
       });
-      
+      const data = await res.json();
       if (res.ok) {
         await fetchPosts();
         setShowPostModal(false);
-        setPostForm({ title: '', content: '' });
+        setPostForm({ title: '', content: '', media: [] });
+        setSelectedFiles([]);
+      } else {
+        throw new Error(data.error || 'Could not create post');
       }
     } catch (error) {
-      alert('Error creating post');
+      alert(error.message || 'Error creating post');
+    } finally {
+      setIsSavingPost(false);
     }
   };
 
   const handleUpdatePost = async () => {
-    if (!postForm.title || !postForm.content) return;
+    if (!postForm.title.trim() || !postForm.content.trim()) return;
     
     try {
+      setIsSavingPost(true);
+      const media = await uploadPostFiles();
       const res = await fetch(`${API_URL}/posts/${editingPost._id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(postForm)
+        body: JSON.stringify({ ...postForm, media })
       });
-      
+      const data = await res.json();
       if (res.ok) {
         await fetchPosts();
         setShowPostModal(false);
         setEditingPost(null);
-        setPostForm({ title: '', content: '' });
+        setPostForm({ title: '', content: '', media: [] });
+        setSelectedFiles([]);
+      } else {
+        throw new Error(data.error || 'Could not update post');
       }
     } catch (error) {
-      alert('Error updating post');
+      alert(error.message || 'Error updating post');
+    } finally {
+      setIsSavingPost(false);
     }
   };
 
@@ -178,7 +239,7 @@ function App() {
   };
 
   const handleAddComment = async (postId) => {
-    const content = commentInputs[postId];
+    const content = (commentInputs[postId] || '').trim();
     if (!content) return;
     
     try {
@@ -197,6 +258,24 @@ function App() {
       }
     } catch (error) {
       alert('Error adding comment');
+    }
+  };
+
+  const handleUpdateComment = async () => {
+    const content = editingComment?.content.trim();
+    if (!content) return;
+    try {
+      const res = await fetch(`${API_URL}/posts/${editingComment.postId}/comments/${editingComment.commentId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ content })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Could not update comment');
+      await fetchPosts();
+      setEditingComment(null);
+    } catch (error) {
+      alert(error.message || 'Error updating comment');
     }
   };
 
@@ -252,7 +331,8 @@ function App() {
                 <button
                   onClick={() => {
                     setEditingPost(null);
-                    setPostForm({ title: '', content: '' });
+                    setPostForm({ title: '', content: '', media: [] });
+                    setSelectedFiles([]);
                     setShowPostModal(true);
                   }}
                   className="btn-create"
@@ -325,6 +405,15 @@ function App() {
                       </div>
                       <h2 className="post-title">{post.title}</h2>
                       <p className="post-text">{post.content}</p>
+                      {!!post.media?.length && (
+                        <div className="post-media-grid">
+                          {post.media.map(item => item.contentType?.startsWith('video/') ? (
+                            <video key={item.key} className="post-media" src={item.url} controls preload="metadata" />
+                          ) : (
+                            <img key={item.key} className="post-media" src={item.url} alt={item.originalName || 'Post attachment'} loading="lazy" />
+                          ))}
+                        </div>
+                      )}
                       
                       <button
                         onClick={() => setExpandedComments({...expandedComments, [post._id]: !expandedComments[post._id]})}
@@ -340,7 +429,8 @@ function App() {
                         <button
                           onClick={() => {
                             setEditingPost(post);
-                            setPostForm({ title: post.title, content: post.content });
+                            setPostForm({ title: post.title, content: post.content, media: post.media || [] });
+                            setSelectedFiles([]);
                             setShowPostModal(true);
                           }}
                           className="action-btn edit"
@@ -388,15 +478,39 @@ function App() {
                                 <span>•</span>
                                 <span>{formatTime(comment.createdAt)}</span>
                               </div>
-                              <p className="comment-text">{comment.content}</p>
+                              {editingComment?.commentId === comment._id ? (
+                                <div className="comment-edit-form">
+                                  <input
+                                    value={editingComment.content}
+                                    onChange={(event) => setEditingComment({ ...editingComment, content: event.target.value })}
+                                    className="comment-input"
+                                    maxLength={2000}
+                                    autoFocus
+                                  />
+                                  <button onClick={handleUpdateComment} className="comment-save-btn">Save</button>
+                                  <button onClick={() => setEditingComment(null)} className="comment-cancel-btn">Cancel</button>
+                                </div>
+                              ) : <p className="comment-text">{comment.content}</p>}
                             </div>
                             {user && user.id === comment.author && (
-                              <button
-                                onClick={() => handleDeleteComment(post._id, comment._id)}
-                                className="comment-delete-btn"
-                              >
-                                <Trash2 size={14} />
-                              </button>
+                              <div className="comment-actions">
+                                <button
+                                  onClick={() => setEditingComment({ postId: post._id, commentId: comment._id, content: comment.content })}
+                                  className="comment-edit-btn"
+                                  aria-label="Edit comment"
+                                  title="Edit comment"
+                                >
+                                  <Edit2 size={14} />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteComment(post._id, comment._id)}
+                                  className="comment-delete-btn"
+                                  aria-label="Delete comment"
+                                  title="Delete comment"
+                                >
+                                  <Trash2 size={14} />
+                                </button>
+                              </div>
                             )}
                           </div>
                         ))}
@@ -477,7 +591,8 @@ function App() {
               <button onClick={() => {
                 setShowPostModal(false);
                 setEditingPost(null);
-                setPostForm({ title: '', content: '' });
+                setPostForm({ title: '', content: '', media: [] });
+                setSelectedFiles([]);
               }} className="modal-close">
                 <X size={24} />
               </button>
@@ -490,20 +605,55 @@ function App() {
                 onChange={(e) => setPostForm({...postForm, title: e.target.value})}
                 className="input"
                 placeholder="Enter post title"
+                maxLength={200}
               />
               <textarea
                 value={postForm.content}
                 onChange={(e) => setPostForm({...postForm, content: e.target.value})}
                 className="textarea"
                 placeholder="What's on your mind?"
+                maxLength={10000}
               />
+
+              <label className="media-picker">
+                <span>Add photos or videos (up to 5 files, 100 MB each)</span>
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/webm,video/quicktime"
+                  multiple
+                  onChange={(event) => {
+                    const files = Array.from(event.target.files || []);
+                    const remaining = Math.max(0, 5 - (postForm.media?.length || 0));
+                    setSelectedFiles(files.slice(0, remaining));
+                    if (files.length > remaining) alert(`You can attach up to 5 files per post.`);
+                    event.target.value = '';
+                  }}
+                />
+              </label>
+              {(postForm.media?.length > 0 || selectedFiles.length > 0) && (
+                <div className="attachment-list">
+                  {postForm.media.map((item) => (
+                    <div className="attachment-item" key={item.key}>
+                      <span>{item.originalName}</span>
+                      <button type="button" onClick={() => setPostForm({ ...postForm, media: postForm.media.filter((media) => media.key !== item.key) })} aria-label={`Remove ${item.originalName}`}>Remove</button>
+                    </div>
+                  ))}
+                  {selectedFiles.map((file, index) => (
+                    <div className="attachment-item pending" key={`${file.name}-${file.lastModified}`}>
+                      <span>{file.name} · {(file.size / (1024 * 1024)).toFixed(1)} MB</span>
+                      <button type="button" onClick={() => setSelectedFiles(selectedFiles.filter((_, fileIndex) => fileIndex !== index))} aria-label={`Remove ${file.name}`}>Remove</button>
+                    </div>
+                  ))}
+                </div>
+              )}
               
               <div className="modal-footer">
                 <button
                   onClick={() => {
                     setShowPostModal(false);
                     setEditingPost(null);
-                    setPostForm({ title: '', content: '' });
+                    setPostForm({ title: '', content: '', media: [] });
+                    setSelectedFiles([]);
                   }}
                   className="btn-secondary"
                 >
@@ -512,8 +662,9 @@ function App() {
                 <button
                   onClick={editingPost ? handleUpdatePost : handleCreatePost}
                   className="btn-primary"
+                  disabled={isSavingPost}
                 >
-                  {editingPost ? 'Update' : 'Post'}
+                  {isSavingPost ? 'Uploading…' : editingPost ? 'Update' : 'Post'}
                 </button>
               </div>
             </div>

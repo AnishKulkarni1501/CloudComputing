@@ -1,0 +1,19 @@
+{
+  "name": "forumhub-api",
+  "version": "1.0.0",
+  "private": true,
+  "main": "server.js",
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1161.0",
+    "@aws-sdk/client-sqs": "^3.1161.0",
+    "@aws-sdk/s3-presigned-post": "^3.1161.0",
+    "@aws-sdk/s3-request-presigner": "^3.1161.0",
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.9",
+    "express": "^5.3.0",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.1.5",
+    "multer": "^2.5.0"
+  }
+}
